@@ -1,0 +1,56 @@
+
+html,body{
+    touch-action: manipulation;
+    overscroll-behavior: none;
+}
+body{
+    overflow: hidden;
+}
+canvas{
+    background: #000;
+    width: 100vw;
+    height: 100vh;
+    position: absolute;
+    top: 0;left: 0;
+}
+.btn{
+    position: relative;
+}
+.btn::before{
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 102%;
+    height: 104%;
+    background-image: linear-gradient(45deg, #ff6b59, #ffc637);
+    transform: translate(-50%, -50%);
+    z-index: -1;
+    border-radius: .2rem;
+}
+
+.surge{
+    animation: .6s surgebg infinite;
+    /* transition: .9s ease;    */
+}
+.surgeFast{
+    animation: .3s surgebg infinite;
+    /* transition: .9s ease;    */
+}
+.surgeSlow{
+    animation: 1.2s surgebg infinite;
+    /* transition: .9s ease; */
+}
+@keyframes surgebg {
+    0%{
+        filter: opacity(1);
+    }
+    50%{
+        filter: opacity(0.5);
+    }
+    100%{
+        filter: opacity(1);
+    }
+}
+
+@import "tailwindcss";
