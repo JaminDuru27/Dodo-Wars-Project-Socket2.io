@@ -1,7 +1,7 @@
 import { AddLaptopControls } from "./laptopcontrols.js"
 import { AddPlayerControlBtns } from "./phonebuttoncontrols.js"
 
-export function Controller(socket, room, Game){
+export function Controller(socket, room, txRef, tyRef, {canvas, controls, effects}){
     const res = {
         keyactiveevents:[],
         keyinactiveevents:[],
@@ -20,13 +20,12 @@ export function Controller(socket, room, Game){
             else this.device = `laptop`
 
             // this.device = `phone`
-
             if(this.device ===`laptop`){
-                this.plugin = AddLaptopControls(socket, room, Game, this)
+                this.plugin = AddLaptopControls(socket, room, txRef, tyRef, {canvas, controls, effects}, this)
             }
 
             if(this.device === `phone`){
-                this.plugin = AddPlayerControlBtns(socket, room, Game, this)
+                this.plugin = AddPlayerControlBtns(socket, room, {canvas, controls, effects}, this)
             }
             return this
         },

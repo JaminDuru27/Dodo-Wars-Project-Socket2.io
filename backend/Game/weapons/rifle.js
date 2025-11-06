@@ -22,7 +22,7 @@ export function Rifle(socket, player, Game){
                 this.rect.update(``)
             }
             this.sprite = Sprite(socket, this.rect, Game).setname('NewRifless').set(24, 1)
-            .loadImage(`/public/weapons/Rifle/rifle.png`)
+            .loadImage(`/weapons/Rifle/rifle.png`)
             this.sprite.addclip(`Idle`).from(0).to(1).loop(false).play()
             this.sprite.addclip(`Shoot`).from(0).to(24).loop(true).delay(0).play()
             .onframe(24, ()=>{
@@ -31,18 +31,18 @@ export function Rifle(socket, player, Game){
             })
             
             this.spritereload= Sprite(socket, this.rect, Game).setname('NewRifleReloadMah').set(16, 1)
-            .loadImage(`/public/weapons/Rifle/reloadmag.png`)
+            .loadImage(`/weapons/Rifle/reloadmag.png`)
             this.spritereload.addclip(`play`).from(0).to(16).loop().delay(0)
             .onframe(16, ()=>{
                 this.$reloading = false
             })
 
             this.spriteshell = Sprite(socket, this.rect, Game).setname('NewRifleShell').set(14, 1)
-            .loadImage(`/public/weapons/Rifle/shootingshell.png`)
+            .loadImage(`/weapons/Rifle/shootingshell.png`)
             this.spriteshell.addclip(`play`).from(0).to(14).loop().delay(0).play()
 
             this.spritemuzzle = Sprite(socket, this.rect, Game).setname('NewRifleMuzzle').set(24, 1)
-            .loadImage(`/public/weapons/Rifle/fullmuzzle.png`)
+            .loadImage(`/weapons/Rifle/fullmuzzle.png`)
             this.spritemuzzle.addclip(`play`).from(0).to(24).loop().delay(0).play()
             
             
@@ -109,12 +109,12 @@ export function Rifle(socket, player, Game){
             rect.vy *= rect.speed
             rect.id = socket.id
             const sprite = Sprite(socket, rect, Game).setname('bullet').set(1, 1)
-            .loadImage(`/public/weapons/bomb.png`)
+            .loadImage(`/weapons/Rifle/bullet.png`)
 
             if(this.spritespark)this.spritespark.remove()
 
             const spritedust = Sprite(socket, rect, Game).setname('bullet-dust')
-            .set(4, 4).loadImage(`/public/effects/bulletcollision.png`)
+            .set(4, 4).loadImage(`effects/bulletcollision.png`)
             spritedust.addclip(`explode`).from(0).to(15).loop(false).delay(0)
             .onframe(15, ()=>{
                 rect.remove()
@@ -199,7 +199,10 @@ export function Rifle(socket, player, Game){
                 
             })
             this.stateManager.update()
-            this.bullets.forEach(b=>b.updateall())
+            this.bullets.forEach(b=>{
+                b.updateall()
+                if(b.delete)this.bullets.splice(x, 1)
+            })
             this.bullets = [...this.bullets.filter(bullet=>!bullet.delete)]
             
         },

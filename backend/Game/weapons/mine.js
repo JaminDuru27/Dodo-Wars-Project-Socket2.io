@@ -12,11 +12,15 @@ export function TripMine(socket,player, Game){
         time: 50,
         t: 3,
         globalrate: 20,
+        $bullets: 2,
+        $maxbullets: 2,
+        $mags: 2,
+        $maxmags: 2,
         load(){
             this.rect = Rect(Game, false)
             this.rect.w -= 20
             this.rect.h -= 20
-            this.sprite  = Sprite(socket, this.rect, Game).setname(`grenadebomb`).set(1, 1).loadImage(`/public/weapons/TripMine/rripmine.png`)
+            this.sprite  = Sprite(socket, this.rect, Game).setname(`grenadebomb`).set(1, 1).loadImage(`weapons/TripMine/tripmine.png`)
             this.sprite.addclip(`p`).from(0).to(1).loop(false).play()
             player.character.keybinder.onkeyup({key: 'a', cb:()=>{
                 this.t =  31
@@ -31,102 +35,79 @@ export function TripMine(socket,player, Game){
             this?.sprite?.update()
             this?.array?.forEach((arr, x)=>{
                 arr.update()
-                arr.updatebomb()
                 if(arr.delete)this.array.splice(x, 1)
             })
         },
         createTripMine(){
+            this.$bullets --
+            if(this.$bullets <= 0){
+                if(this.$mags > 0){
+                    this.$bullets = this.$maxbullets
+                    this.$mags --
+                }
+            }
+            if(this.$bullets <=  0 && this.$mags <= 0){
+                this.$bullets = 0
+                this.$mags = 0
+                return {delete: true,update(){}}
+            }
+
+            let del
             const r = player.character.rect
             const rect = Rect(Game)
-            const sprite = Sprite(socket, rect, Game).setname('bomb').set(1, 1).loadImage('/public/weapons/TripMine/tripmine.png')
-            const exp = Sprite(socket, rect, Game).setname('exp').set(4, 4).loadImage('/public/effects/explosion.png')
+            rect.x  = r.x + r.w + 2
+            rect.y  = r.y
+            rect.weight = 0.5
+            const speed = 10
+            rect.vx = Math.cos(player.aimangle) * speed
+            rect.vy = Math.sin(player.aimangle) * speed
+            rect.exception.push(`player`,`self`)
+            rect.addname(`playerexception`)
+            rect.oncollisionwith(`tile`,()=>{
+                rect.vx = 0
+                rect.vy = 0
+                rect.grounded = true
+                rect.applygravity = false
+                rect.shouldresolve = false
+            })
+            rect.oncollisionwith(`player`, ()=>{
+                sprite.hidden=true
+                sprite.remove()
+                if(rect.stop)return
+                rect.addname(`damage`)
+                rect.x -=150
+                rect.y -= 150
+                rect.w = 150
+                rect.h = 150
+                rect.stop = true
+                exp.offw = 150
+                exp.offh= 150
+                exp.hidden = false
+                exp.playclip(`explode`)
+            })
+            const sprite = Sprite(socket, rect, Game).setname('bomb').set(1, 1).loadImage('weapons/TripMine/tripmine.png')
+            const exp = Sprite(socket, rect, Game).setname('exp').set(4, 4).loadImage('effects/explosion.png')
             exp.addclip('explode').from(0).to(16).loop(false).delay(0)
             .onframe(14, ()=>{
                 rect.remove()
                 exp.remove()
-            })
+                del = true
 
-            sprite.offw = 20
-            sprite.offh = 20
-            sprite.offx = -10
-            sprite.offy = -10
-            exp.offw = 50
-            exp.offh = 50
-            exp.offx = -30
-            exp.offy = -30
-            const signx = Math.sign(Math.sin(player.aimangle))
-            const signy = Math.sign(Math.cos(player.aimangle))
-            rect.vy = Math.sin(player.aimangle) * 10
-            rect.vx = Math.cos(player.aimangle) * 15 
-            rect.w = this.size
-            rect.h = this.size
-            rect.weight = 0.5
-            rect.x = r.x + r.w /2
-            rect.y = r.y + r.h/2
-            rect.name = `bullet-${socket.id}`
-            rect.addname(player.id)
-            rect.id = player.id
-            rect.addname(`bomb`)
-            rect.exception.push(`self`)
-            rect.exception.push(rect.name)
-            rect.timer = 0
-            rect.time = this.time
-            rect.oncollisionbottom(()=>{
-                rect.vy = 0
-                rect.vx = 0
             })
-            let popped = false
-            const pop =()=>{
-                sprite.remove()
-                exp.playclip(`explode`)
-                console.log(`exploding..`)
-                rect.x -= this.size * 10
-                rect.y -= this.size * 10
-                rect.w =  this.size * 20
-                rect.h =  this.size * 20
-                rect.vx  =0
-                rect.vy  =0
-                rect.applygravity =false
-                rect.name = `damage`
-                rect.damage = this.damage
-            }
-            rect.oncollisionbottom(()=>{
-                rect.placed  = true
-            })
-            rect.oncollisionwith(`tile`, (r)=>{
-                rect.attachoffx =  rect.x  - r.x  
-                rect.attachoffy =  rect.y -r.y
-                rect.attachrect = r
-                rect.placed = true
-            })
-            rect.oncollisionwith(`player`, (r)=>{
-                if(r.id !== player.id)
-                if(rect.placed){
-                    rect.starttimer = true
-                }
-            })
-            rect.oncollisionwith(`bomb`, (rect)=>{
-                rect.remove()
-            })
-            rect.updatebomb = ()=>{
-                if(rect?.starttimer)
-                rect.timer ++
-                if(rect.timer > rect.time - 30){
-                    if(!popped){
-                        pop()
-                    }
-                    popped = true
+            exp.hidden = true
+
+            return {
+                delete: del,
+                update(){
+                    this.delete = del
+                    rect.update()
+                    sprite.update()
                     exp.update()
-                }
-                if(rect.timer > rect.time){
-                    this.array.splice(this.array.indexOf(rect), 1)
-                    exp.remove()
-                }
 
-                sprite.update()
+                }
             }
-            if(rect.iscolliding){rect.vx=0; rect.vy=0}
-            return rect
+
+            
         },
         lerp(a, b, t){return a + (b - a) * t},
         delay(cb){

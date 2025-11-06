@@ -26,13 +26,13 @@ export function Loadouts(socket, player, Game){
                     primary_assault: undefined,
                     secondary_assault: undefined,
                     primary_bomb: 'Grenade',
-                    secondary_bomb: 'Trip Mine',
+                    secondary_bomb: 'Sticky Bomb',
                     primary_meelee: undefined,
                     secondary_meelee: undefined,
                 },
             ]
             this.loadout = this.array[0]
-            this.setWeapon('Trip Mine')
+            this.setWeapon(`Bazooka`)
 
             const grab = (rect, name)=>{
                 rect.remove()

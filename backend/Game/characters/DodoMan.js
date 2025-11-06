@@ -47,17 +47,18 @@ export function DodoMan(player, socket, io, Game){
 
             this.rect= Rect(Game)
             this.rect.name = `player-${socket.id}`
+            this.rect.slidex = 0.5
+            this.rect.slidey = 0.8
             this.rect.addname('player')
             this.rect.addname(player.id)
             this.rect.id = player.id
-            this.rect.exception.push(`bomb${socket.id}`, `bullet-${socket.id}`, player.id, `damage`, `pickup`)
-            
+            this.rect.exception.push(`playerexception`,`bomb${socket.id}`, `bullet-${socket.id}`, player.id, `damage`, `pickup`)
             this.rect.oncollisionwith(`damage`, (rect)=>{
                 if(rect.id === socket.id)return
                 this.health.decrement = rect.damage
                 this.health.decrease()
                 this.attackerId = rect.id
-            })
+            })  
             
             this.rect.oncollisionbottom(()=>{
                 if(this.hardlanding){
@@ -85,7 +86,6 @@ export function DodoMan(player, socket, io, Game){
             .onkeydown({key: 'ArrowLeft',cb:()=>{
                 this.rect.vx = -5
                 this.particles.populate(this.runparticlesdata)
-
             }})
             .onkeyup({key: `ArrowLeft`, cb:()=>{
                 this.rect.vx = 0
@@ -128,7 +128,7 @@ export function DodoMan(player, socket, io, Game){
 
 
             this.sprite = Sprite(socket, this.rect, Game)
-            .setname('dodoman').set(8, 8).loadImage('/public/players/dodoman.png')
+            .setname('dodoman').set(8, 8).loadImage('/players/dodoman.png')
             this.sprite.offx = -40
             this.sprite.offy = -57
             this.sprite.offw = 75
@@ -136,7 +136,7 @@ export function DodoMan(player, socket, io, Game){
             this.sprite.zIndex = 2
 
             this.rolleffect = Sprite(socket, this.rect, Game)
-            .setname('rollEffect').set(10, 7).loadImage('/public/effects/firesparkeffect-compact.png')
+            .setname('rollEffect').set(10, 7).loadImage('/effects/firesparkeffect-compact.png')
             this.rolleffect.addclip(`play`).from(0).to(60).delay(0)
             .onframe(20,()=>{
                 this.rolleffect.hidden = true
@@ -260,18 +260,18 @@ export function DodoMan(player, socket, io, Game){
 
             //CONTROLS
             this.controls = Controls(socket)
-            this.controls.createbtn({style:'bottom: 31%; left: 13%;', size:`4rem`, src: '/public/buttons/DodoMan/jump.png'})
+            this.controls.createbtn({style:'bottom: 31%; left: 13%;', size:`4rem`, src: 'buttons/DodoMan/jump.png'})
             .cbdown(()=>{
                 this.rect.vy = -15
             })
-            this.controls.createbtn({style:'bottom: 10%; left: 5%;', size:`4rem`,src: '/public/buttons/DodoMan/run-left.png'})
+            this.controls.createbtn({style:'bottom: 10%; left: 5%;', size:`4rem`,src: 'buttons/DodoMan/run-left.png'})
             .cbdown(()=>{
                 this.rect.vx = -5
             })
             .cbup(()=>{
                 this.rect.vx = 0
             })
-            this.controls.createbtn({style:'bottom: 10%; left: 21%;', size:`4rem`, src: '/public/buttons/DodoMan/run-right.png'})
+            this.controls.createbtn({style:'bottom: 10%; left: 21%;', size:`4rem`, src: 'buttons/DodoMan/run-right.png'})
             .cbdown(()=>{
                 this.rect.vx = 5
             })

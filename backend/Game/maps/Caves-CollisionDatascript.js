@@ -14,6 +14,6 @@ export function Caves(){
       cw: 12.99,
       ch: 12.99
     },
-    src: '/public/maps/cave.png'
+    src: '/maps/cave.png'
   }
 }

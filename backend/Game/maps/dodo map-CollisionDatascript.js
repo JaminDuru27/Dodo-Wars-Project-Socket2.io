@@ -14,6 +14,6 @@ export function dodomap(){
       cw: 20,
       ch: 20,
     },
-    src: '/public/maps/dodomap.png',
+    src: 'maps/dodomap.png',
   }
 }

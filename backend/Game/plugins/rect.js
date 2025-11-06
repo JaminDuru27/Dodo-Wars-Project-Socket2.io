@@ -10,6 +10,10 @@ export function Rect(Game, push = true){
         exception:[],
         names:[],
         buoyancy: 0,
+        lx: 0,
+        ly: 0,
+        slidex:1,
+        slidey:1,
         attachrect: undefined,
         attachoffx: 0, attachoffy: 0, 
         $oncollisiontop:[],
@@ -26,6 +30,17 @@ export function Rect(Game, push = true){
         addname(name){
             if(!this.name)this.name = name
             this.names.push(name)
+        },
+        attach(rect, no = true){
+            const dx = rect.x - this.x
+            const dy = rect.y - this.y
+            this.attachoffx = dx
+            this.attachoffy = dy
+            this.attachrect = rect
+            if(no){
+                this.vx = 0
+                this.vy = 0
+            }
         },
         load(){
             if(push)
@@ -68,7 +83,10 @@ export function Rect(Game, push = true){
                 let find  
                 this.$oncollisionwith.forEach(e=>{
                     if([...rect.names, rect.name].includes(e.name)) find = e
-                }) 
+                })
+                if(find?.name === `tile`){
+                    // console.log(this.name, find?.cb(rect))
+                }
                 if(find){
                     find.cb(rect)
                 }
@@ -116,12 +134,17 @@ export function Rect(Game, push = true){
             }
 
         },
+        lerp(a, b, t){return a + (b-a) * t},
+       
         updateGravity(){
             if(!this.applymovement)return
+            this.lx = this.lerp(this.lx, this.x, this.slidex)
             this.x += this.vx
-            if(!this.applygravity)return
+            this.ly = this.lerp(this.ly, this.y, this.slidey)
             this.y += this.vy
             this.vy += this.weight
+
+
         },
         updateAttach(){
             if(!this.attachrect)return  

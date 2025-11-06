@@ -27,8 +27,8 @@ export function Frag(socket,player, Game){
         createFrag(){
             const r = player.character.rect
             const rect = Rect(Game)
-            const sprite = Sprite(socket, rect, Game).setname('bomb').set(1, 1).loadImage('/public/weapons/bomb.png')
-            const exp = Sprite(socket, rect, Game).setname('exp').set(4, 4).loadImage('/public/effects/explosion.png')
+            const sprite = Sprite(socket, rect, Game).setname('bomb').set(1, 1).loadImage('weapons/bomb.png')
+            const exp = Sprite(socket, rect, Game).setname('exp').set(4, 4).loadImage('effects/explosion.png')
             exp.addclip('explode').from(0).to(16).loop(false).delay(0)
             .onframe(14, ()=>{
                 rect.remove()

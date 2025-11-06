@@ -12,109 +12,123 @@ export function StickyBomb(socket,player, Game){
         time: 120,
         t: 30,
         globalrate: 20,
+        $bullets: 2,
+        $maxbullets: 2,
+        $mags: 2,
+        $maxmags: 2,
         load(){
+            this.rect = Rect(Game, false)
+            this.rect.w -= 20
+            this.rect.h -= 20
+            this.sprite  = Sprite(socket, this.rect, Game).setname(`grenadebomb`).set(1, 1).loadImage(`weapons/StickyBomb/bomb.png`)
+            this.sprite.addclip(`p`).from(0).to(1).loop(false).play()
             player.character.keybinder.onkeyup({key: 'a', cb:()=>{
                 this.t =  31
             }})
         },
+        hide(){this.sprite.hidden = true;return this},
+        show(){this.sprite.hidden = false;return this},
         update(){
+            this?.rect?.update()
+            this.rect.x = (player.character.sprite.flip)?player.character.rect.x + 20: player.character.rect.x
+            this.rect.y = player.character.rect.y + 10
+            this?.sprite?.update()
+            
             this?.array?.forEach((arr, x)=>{
                 arr.update()
-                arr.updatebomb()
                 if(arr.delete)this.array.splice(x, 1)
             })
         },
         createSitcky(){
+            this.$bullets --
+            if(this.$bullets <= 0){
+                if(this.$mags > 0){
+                    this.$bullets = this.$maxbullets
+                    this.$mags --
+                }
+            }
+            if(this.$bullets <=  0 && this.$mags <= 0){
+                this.$bullets = 0
+                this.$mags = 0
+                return {delete: true,update(){}}
+            }
+            let del
             const r = player.character.rect
             const rect = Rect(Game)
-            const sprite = Sprite(socket, rect, Game).setname('bomb').set(1, 1).loadImage('/public/weapons/bomb.png')
-            const exp = Sprite(socket, rect, Game).setname('exp').set(4, 4).loadImage('/public/effects/explosion.png')
+            rect.x  = r.x + r.w + 2
+            rect.y  = r.y
+            rect.weight = 0.5
+            const speed = 10
+            rect.vx = Math.cos(player.aimangle) * speed
+            rect.vy = Math.sin(player.aimangle) * speed
+            rect.exception.push(`player`,`self`)
+            rect.addname(`playerexception`)
+            let grounded
+
+            rect.oncollisionwith(`player`, (rect)=>{
+                if(rect?.id !== player.id && !grounded){
+                    rect.vx = 0
+                    rect.vy = 0
+                    rect.attach(rect)                
+                    rect.applygravity = false
+                    rect.shouldresolve = false
+                    startTimeout()
+                    grounded = true
+                }
+            }) 
+            rect.oncollisionwith(`tile`,()=>{
+                if(grounded)return
+                rect.vx = 0
+                rect.vy = 0
+                rect.attach(rect)
+                rect.applygravity = false
+                rect.shouldresolve = false
+                startTimeout()
+                grounded = true
+            })
+            
+            let timeout
+            const startTimeout = ()=>{
+                clearTimeout(timeout)
+                timeout = setTimeout(()=>{
+                    sprite.hidden=true
+                    sprite.remove()
+                    if(rect.stop)return
+                    rect.addname(`damage`)
+                    rect.x -=150
+                    rect.y -= 150
+                    rect.w = 150
+                    rect.h = 150
+                    rect.stop = true
+                    exp.offw = 150
+                    exp.offh= 150
+                    exp.hidden = false
+                    exp.playclip(`explode`)
+                
+                }, 1000)
+            }
+
+            const sprite = Sprite(socket, rect, Game).setname('bomb').set(1, 1).loadImage('/weapons/StickyBomb/bomb.png')
+            const exp = Sprite(socket, rect, Game).setname('exp').set(4, 4).loadImage('/effects/explosion.png')
             exp.addclip('explode').from(0).to(16).loop(false).delay(0)
             .onframe(14, ()=>{
                 rect.remove()
                 exp.remove()
-            }).play()
+                del = true
+            })
+            exp.hidden = true
 
-            sprite.offw = 20
-            sprite.offh = 20
-            sprite.offx = -10
-            sprite.offy = -10
-            exp.offw = 50
-            exp.offh = 50
-            exp.offx = -30
-            exp.offy = -30
-            
-            const signx = Math.sign(Math.sin(player.aimangle))
-            const signy = Math.sign(Math.cos(player.aimangle))
-            rect.vy = Math.sin(player.aimangle) * 10
-            rect.vx = Math.cos(player.aimangle) * 15 
-            rect.w = this.size
-            rect.h = this.size
-            rect.weight = 0.5
-            rect.x = r.x + r.w /2
-            rect.y = r.y + r.h/2
-            rect.name = `bomb${socket.id}`
-            rect.addname(player.id)
-            rect.id = player.id
-            rect.addname(`sticky`)
-            rect.exception.push(`player-${socket.id}`, `self`)
-            rect.exception.push(rect.name)
-            rect.timer = 0
-            rect.time = this.time
-            let popped = false
-            const pop =()=>{
-                sprite.remove()
-                rect.x -= this.size * 10
-                rect.y -= this.size * 10
-                rect.w =  this.size * 20
-                rect.h =  this.size * 20
-                rect.vx  =0
-                // rect.vy  =0
-                rect.applygravity =false
-                rect.name = `damage`
-                rect.damage = this.damage
-            }
-            rect.oncollisionwith('enemy', (r)=>{
-                rect.attachoffx =  rect.x  - r.x  
-                rect.attachoffy =  rect.y -r.y
-                rect.attachrect  = r
-                // rect.time = 0
-            })
-            rect.oncollisionwith('sticky', (rect)=>{
-                rect.attachoffx =  rect.x  - r.x  
-                rect.attachoffy =  rect.y -r.y
-                rect.attachrect  = r
-            })
-            rect.oncollisionwith('tile', (r)=>{
-                rect.attachoffx =  rect.x  - r.x  
-                rect.attachoffy =  rect.y -r.y
-                rect.attachrect  = r
-                // rect.time = 0
-            })
-            rect.updatebomb = ()=>{
-                if(rect.timer > rect.time ){
-                    if(!popped){
-                        pop()
-                    }
-                    popped = true
+
+
+            return {
+                delete :del,
+                update(){
+                    this.delete = del
+                    rect.update()
                     exp.update()
-                    
-                }
-                if(rect.attachrect){
-                    rect.timer ++
-                    // this.array.splice(this.array.indexOf(rect), 1)
-                    // exp.remove()
-                }
-
-                sprite.update()
-                if(rect.iscolliding){
-                    rect.vx = 0
-                    rect.vy = 0
-
+                    sprite.update()
                 }
             }
-
-            return rect
         },
         lerp(a, b, t){return a + (b - a) * t},
         delay(cb){

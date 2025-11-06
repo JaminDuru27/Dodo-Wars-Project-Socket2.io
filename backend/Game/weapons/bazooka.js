@@ -24,17 +24,16 @@ export function Bazooka(socket, player, Game){
                 this.rect.update(``)
             }
             this.sprite = Sprite(socket, this.rect, Game).setname('Bazooka').set(8, 1)
-            .loadImage(`/public/weapons/Bazooka/bazooka.png`)
+            .loadImage(`/weapons/Bazooka/bazooka.png`)
             this.sprite.addclip(`Shoot`).from(0).to(8).loop(false).delay(0)
             .onframe(8, ()=>{
                 this.stateManager.setstate(`Idle`)
             })
             
             this.spritereload= Sprite(socket, this.rect, Game).setname('ccBazookareload').set(16, 1)
-            .loadImage(`/public/weapons/Bazooka/load.png`)
+            .loadImage(`/weapons/Bazooka/load.png`)
             this.spritereload.addclip(`play`).from(0).to(16).loop(true).delay(2)
             .onframe(16, ()=>{
-                console.log(`rekoad aubun`)
                 this.$reloading = false
             }).play()
             
@@ -103,8 +102,8 @@ export function Bazooka(socket, player, Game){
             rect.vy = Math.sin(player.aimangle)
             rect.x = player.character.rect.x + 40
             rect.y = player.character.rect.y + 10
-            rect.w = 20
-            rect.h = 10
+            rect.w = 50
+            rect.h = 30
             rect.speed =  6
             rect.weight =  0
             rect.exception = [`player-${socket.id}`, `self`, `damage`]
@@ -117,12 +116,12 @@ export function Bazooka(socket, player, Game){
             rect.vy *= rect.speed
             rect.id = socket.id
             const sprite = Sprite(socket, rect, Game).setname('bullet').set(1, 1)
-            .loadImage(`/public/weapons/Bazooka/ammo.png`)
+            .loadImage(`/weapons/Bazooka/ammo.png`)
             sprite.rotation = player.aimangle
             if(this.spritespark)this.spritespark.remove()
 
             const spritedust = Sprite(socket, rect, Game).setname('bullet-dust')
-            .set(4, 4).loadImage(`/public/effects/explosion.png`)
+            .set(4, 4).loadImage(`/effects/explosion.png`)
             spritedust.addclip(`explode`).from(0).to(15).loop(false).delay(0)
             .onframe(15, ()=>{
                 rect.remove()

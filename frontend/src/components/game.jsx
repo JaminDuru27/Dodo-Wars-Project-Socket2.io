@@ -1,14 +1,15 @@
 import { useNavigate, useParams, useSearchParams } from "react-router-dom"
 import { Multiplayer } from "./multiplayer"
 import { motion } from "framer-motion"
-import { rooms } from "../App"
-import { useEffect } from "react"
+import { use, useEffect, useRef } from "react"
 import { Canvas } from "./canvs"
+import { socket } from "../App"
+import { playerinfo } from "../components(JS)/playerinfo"
+
 export function Game() {
     const nav = useNavigate()
     const {roomid} = useParams()
-    const find = rooms.find(id=>id === roomid)
-    console.log(`current rooms: ${rooms}`)
+    
     // if(!find)      
     // return(
     //     <>

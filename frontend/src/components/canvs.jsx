@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react"
 import { images, socket, updates } from "../App"
 import { loop } from "../components(JS)/gam"
+import { Controller } from "../components(JS)/controller"
 
 export function  Canvas({roomid}) {
     // refs instead of state to avoid re-renders
@@ -62,7 +63,7 @@ export function  Canvas({roomid}) {
                 ltyRef.current = tyRef.current
             })
 
-            const {canvas, ctx, effects, controls}  = getElements(roomid)
+            const {canvas, ctx, effects, controls}  = getElements(roomid, txRef, tyRef)
             canvasElRef.current = canvas
             ctxRef.current = ctx
 
@@ -116,16 +117,20 @@ export function  Canvas({roomid}) {
     )
 }
 
-
-function getElements(roomid){
+function getElements(roomid, txRef, tyRef){
     const effects = document.querySelector(`.effects${roomid}`)
     const controls = document.querySelector(`.controls${roomid}`)
     const el = document.querySelector(`.canvas${roomid}`)
-    // if(el)el.requestFullscreen().catch(err=>console.log(err))
+    if(el)el.requestFullscreen().catch(err=>console.log(err))
     el.width =  el.clientWidth
     el.height = el.clientHeight
     const ctx = el.getContext(`2d`)
-
+    const controller = Controller(socket, roomid, txRef, tyRef,{canvas:el, controls, effects})
+    controller.setForThisDevice()
+    controller.onkeyactive(({aimangle})=>{
+        socket.emit(`set-aim-angle`, aimangle)
+    })
+    
     window.onresize = ()=>{
         el.width =  el.clientWidth
         el.height = el.clientHeight

@@ -30,8 +30,8 @@ export function Shotgun(socket, player, Game){
             //     console.log(`added Mags 2`)
             //     this.$mags = 3
             // },20000)
-            this.sprite = Sprite(socket, this.rect, Game).setname('shotgun').set(4, 16).loadImage(`/public/weapons/Shotgun/shotgun.png`)
-            this.reloadSprite = Sprite(socket, this.rect, Game).setname('reloadmag').set(14, 1).loadImage(`/public/weapons/Shotgun/reloadshell.png`)
+            this.sprite = Sprite(socket, this.rect, Game).setname('shotgun').set(4, 16).loadImage(`/weapons/Shotgun/shotgun.png`)
+            this.reloadSprite = Sprite(socket, this.rect, Game).setname('reloadmag').set(14, 1).loadImage(`/weapons/Shotgun/reloadshell.png`)
             this.reloadSprite.addclip('play').from(0).to(14).loop(false).delay(2)
             .onframe(10, ()=>{
                 if(this.$bullets < this.$maxbullets){
@@ -48,10 +48,10 @@ export function Shotgun(socket, player, Game){
             })
             this.reloadSprite.hidden = true
 
-            this.fullmuzzle = Sprite(socket, this.rect, Game).setname('fullmuzzle').set(14, 1).loadImage(`/public/weapons/Shotgun/fullmuzzle.png`)
+            this.fullmuzzle = Sprite(socket, this.rect, Game).setname('fullmuzzle').set(14, 1).loadImage(`/weapons/Shotgun/fullmuzzle.png`)
             this.fullmuzzle.addclip('play').from(0).to(14).loop(true).delay(0)
             .onframe(14, ()=>{this.stateManager.setstate(`Idle`)})
-            this.shootingshell = Sprite(socket, this.rect, Game).setname('shootingshell').set(14, 1).loadImage(`/public/weapons/Shotgun/shootingshell.png`)
+            this.shootingshell = Sprite(socket, this.rect, Game).setname('shootingshell').set(14, 1).loadImage(`/weapons/Shotgun/shootingshell.png`)
             this.shootingshell.addclip('play').from(0).to(14).loop(true).delay(0)
             .onframe(14, ()=>{this.stateManager.setstate(`Idle`)})
             
@@ -67,6 +67,7 @@ export function Shotgun(socket, player, Game){
                 this.sprite.playclip(`normal`)
                 this.fullmuzzle.hidden  = true
                 this.shootingshell.hidden  = true
+                
             })
             this.stateManager.add().name(`Empty`).cond(()=>false)
             .cb(()=>{ 
@@ -113,7 +114,10 @@ export function Shotgun(socket, player, Game){
             })
             player.character.keybinder.onkeyup({key:'a',cb:()=>{
                 this.t = 30
-                this.stateManager.setstate('Idle')
+                this.sprite.playclip(`normal`)
+                this.fullmuzzle.hidden  = true
+                this.shootingshell.hidden  = true
+                
             }})
         },
         hide(){
@@ -149,13 +153,13 @@ export function Shotgun(socket, player, Game){
             rect.vy *= rect.speed
             rect.id = socket.id
             const sprite = Sprite(socket, rect, Game).setname('bullet').set(1, 1)
-            .loadImage(`/public/weapons/bomb.png`)
+            .loadImage(`/weapons/Shotgun/bullet.png`)
 
         
             if(this.spritespark)this.spritespark.remove()
 
             const spritedust = Sprite(socket, rect, Game).setname('bullet-dust')
-            .set(4, 4).loadImage(`/public/effects/bulletcollision.png`)
+            .set(4, 4).loadImage(`/effects/bulletcollision.png`)
             spritedust.addclip(`explode`).from(0).to(15).loop(false).delay(0)
             .onframe(15, ()=>{
                 rect.remove()
@@ -231,7 +235,10 @@ export function Shotgun(socket, player, Game){
             this.animator.update()
             this.stateManager.update()
 
-            this.bullets.forEach(b=>b.updateall())
+            this.bullets.forEach(b=>{
+                b.updateall()
+                if(b.delete)this.bullets.splice(x, 1)
+            })
             this.bullets = [...this.bullets.filter(bullet=>!bullet.delete)]
         },
     }

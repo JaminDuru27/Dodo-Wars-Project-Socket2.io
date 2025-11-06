@@ -37,11 +37,11 @@ socket.on('connect', ()=>{
   socket.on('disconnect', ()=>{
     updates = []
     socket.off(`load-image`, addimage)
-
   })
+
   window.onkeydown = (e)=>{
       socket.emit('keydown', ({key:e.key}))
-  }
+    }
   window.onkeyup = (e)=>{
       socket.emit('keyup', ({key:e.key}))
   }
@@ -49,7 +49,6 @@ socket.on('connect', ()=>{
 })
 socket.on('get-rooms', (rms)=>{
   rooms = rms
-  console.log(`rms`, rms)
 })
 function App() {
   const [count, setCount] = useState(0)
@@ -67,7 +66,7 @@ function App() {
           <Multiplayer/>
           </>
         }></Route>
-        <Route path='/multiplayer/waitroom/:roomid' element={
+        <Route path='/multiplayer/:roomid' element={
           <>
           <Game />
           </>

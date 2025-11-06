@@ -1,6 +1,5 @@
-import { tx, ty } from "./game.js"
 
-export function AddLaptopControls(socket, room, Game, Controller){
+export function AddLaptopControls(socket, room, txRef, tyRef,Game, Controller){
     const res ={
         angle: 0,
         load(){
@@ -18,8 +17,8 @@ export function AddLaptopControls(socket, room, Game, Controller){
             })
             window.addEventListener(`pointermove`, (e)=>{
                 const rect = Game.canvas.getBoundingClientRect()
-                this.mx = e.clientX - rect.x - tx
-                this.my = e.clientY - rect.y - ty
+                this.mx = e.clientX - rect.x - txRef[`current`]
+                this.my = e.clientY - rect.y - tyRef[`current`]
                 let r =this?.player
                 if(r)
                 this.angle = Math.atan2(this.my - r.y, this.mx - r.x) 

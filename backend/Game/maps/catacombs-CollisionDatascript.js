@@ -14,7 +14,7 @@ export function catacombs(){
       cw: 20,
       ch: 20,
     },
-    src:`/public/maps/catacombs.png`, 
+    src:`maps/catacombs.png`, 
 
   }
 }

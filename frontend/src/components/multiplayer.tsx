@@ -3,14 +3,14 @@ import { Back, LCard } from "./menu"
 import { AnimatePresence, motion } from "framer-motion"
 import { socket } from "../App"
 import { useNavigate } from "react-router-dom"
+import { playerinfo } from "../components(JS)/playerinfo"
 export function Multiplayer (){
     const [matchmake, setmatchmake] = useState(false)
     const nav = useNavigate()
     useEffect(()=>{
         const timeout = setTimeout(()=>{
             socket.on('matched', (data)=>{
-                nav(`/multiplayer/waitroom/${data.roomid}`)
-                console.log(`matched data`, data)
+                nav(`/multiplayer/${data.roomid}`)
             })
         })
         return ()=>{clearTimeout(timeout)}
@@ -29,13 +29,7 @@ export function Multiplayer (){
                     <div 
                         onClick={()=>{
                             setmatchmake(prev=>!prev)
-                            socket.emit('matchmake', {
-                                id: socket.id, 
-                                info:{name: 'Mao', level: 20},
-                                withPlayers:[], 
-                                mode: 'deathmatch',
-                                name: 'Mao',
-                            })
+                            socket.emit('matchmake', playerinfo(socket))
                         }}
                         className="card uppercase bg-amber-400 text-black text-[.8rem] justify-center items-center flex-col justify-between cursor-pointer items-center backdrop-blur-2xl py-1 rounded h-10 overflow-hidden rounded-sm mb-2 flex flex-col items-center te">
                             {matchmake ? 'cancel' : 'Find Match'}

@@ -14,7 +14,7 @@ export function cave (){
       cw: 12.000000000000009,
       ch: 12.000000000000009
     },
-    src: '/public/maps/cave.png'
+    src: 'maps/cave.png'
   }
   return res
 } 

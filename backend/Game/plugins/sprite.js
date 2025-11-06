@@ -29,9 +29,7 @@ export function Sprite(socket, rect, Game){
                 this.imgh = imgh
                 this.sw = this.imgw / this.nx 
                 this.sh = this.imgh / this.ny
-                this.loaded = true
-                console.log(`loaded image`, this.imgw, this.imgh, this.sw, this.sh)
-
+                this.loaded = true  
             }}
             this.socketevents.push(event)
             socket.emit(`load-image`,{src, id:this.name})
@@ -135,8 +133,8 @@ export function Sprite(socket, rect, Game){
             return data
         },
         calcdim(){
-            this.x  = rect.x + this.offx
-            this.y  = rect.y + this.offy
+            this.x  = rect.lx + this.offx
+            this.y  = rect.ly + this.offy
             this.w  = rect.w + this.offw
             this.h  = rect.h + this.offh
         },

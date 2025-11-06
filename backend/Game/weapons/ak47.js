@@ -22,18 +22,18 @@ export function AK47(socket, player, Game){
                 this.rect.update(``)
             }
             this.sprite = Sprite(socket, this.rect, Game).setname('Ak47').set(12, 1)
-            .loadImage(`/public/weapons/AK47/ak47.png`)
+            .loadImage(`/weapons/AK47/ak47.png`)
             this.sprite.addclip(`Idle`).from(0).to(0).loop(false).play()
             this.sprite.addclip(`Shoot`).from(0).to(12).loop(true).delay(0).play()
             
             this.spritereload= Sprite(socket, this.rect, Game).setname('Akreload').set(16, 1)
-            .loadImage(`/public/weapons/AK47/reload.png`)
+            .loadImage(`/weapons/AK47/reload.png`)
             this.spritereload.addclip(`play`).from(0).to(16).loop(false).delay(0)
             .onframe(13, ()=>{
                 this.$reloading = false
             })
             this.spritempty= Sprite(socket, this.rect, Game).setname('Akeempty').set(16, 1)
-            .loadImage(`/public/weapons/AK47/reload.png`)
+            .loadImage(`/weapons/AK47/reload.png`)
             this.spritempty.addclip(`play`).from(0).to(16).loop().delay(0)
 
             
@@ -75,7 +75,7 @@ export function AK47(socket, player, Game){
             player.character.keybinder.onkeyup({key:'a',cb:()=>{
                 this.t = 10
                 this.$attacking = false
-
+                this.stateManager.setstate(`Idle`)
             }})
         },
         hide(){
@@ -109,12 +109,12 @@ export function AK47(socket, player, Game){
             rect.vy *= rect.speed
             rect.id = socket.id
             const sprite = Sprite(socket, rect, Game).setname('bullet').set(1, 1)
-            .loadImage(`/public/weapons/bomb.png`)
+            .loadImage(`/weapons/AK47/bullet.png`)
 
             if(this.spritespark)this.spritespark.remove()
 
             const spritedust = Sprite(socket, rect, Game).setname('bullet-dust')
-            .set(4, 4).loadImage(`/public/effects/bulletcollision.png`)
+            .set(4, 4).loadImage(`/effects/bulletcollision.png`)
             spritedust.addclip(`explode`).from(0).to(15).loop(false).delay(0)
             .onframe(15, ()=>{
                 rect.remove()
@@ -185,10 +185,12 @@ export function AK47(socket, player, Game){
                 sprite.update()
                 sprite.rotation = player.aimangle
                 sprite.flip = player.character.sprite.flip
-                
             })
             this.stateManager.update()
-            this.bullets.forEach(b=>b.updateall())
+            this.bullets.forEach((b, x)=>{
+                b.updateall()
+                if(b.delete)this.bullets.splice(x, 1)
+            })
             this.bullets = [...this.bullets.filter(bullet=>!bullet.delete)]
             
         },
