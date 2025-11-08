@@ -47,26 +47,41 @@ export function DodoMan(player, socket, io, Game){
 
             this.rect= Rect(Game)
             this.rect.name = `player-${socket.id}`
-            this.rect.slidex = 0.5
+            this.rect.slidex = 0.3
             this.rect.slidey = 0.8
             this.rect.addname('player')
             this.rect.addname(player.id)
             this.rect.id = player.id
-            this.rect.exception.push(`playerexception`,`bomb${socket.id}`, `bullet-${socket.id}`, player.id, `damage`, `pickup`)
+            this.rect.exception.push(`playerexception`,`bomb${socket.id}`, `bullet-${socket.id}`, player.id, `damage`, `pickup`, `zoom-1`, `zoom-1.25`,`zoom-.75`, `zoom-.25`, `zoom-.50`)
             this.rect.oncollisionwith(`damage`, (rect)=>{
-                if(rect.id === socket.id)return
+                if(rect.damage === 0)return
+                if(rect.id === this.rect.id)return
+                rect.damagecb()
                 this.health.decrement = rect.damage
                 this.health.decrease()
+                rect.damage = 0
+                if(rect.id === socket.id)return 
                 this.attackerId = rect.id
+                this.bullet = rect
             })  
-            
+            this.rect.oncollisionwith(`zoom-.75`, (rect)=>{
+                socket.emit(`set-sx`, 0.75)
+                socket.emit(`set-sy`, 0.75)
+            })
+            this.rect.oncollisionwith(`zoom-1`, (rect)=>{
+                socket.emit(`set-sx`, 1)
+                socket.emit(`set-sy`, 1)
+            })
+            this.rect.oncollisionwith(`zoom-.50`, (rect)=>{
+                socket.emit(`set-sx`, 0.50)
+                socket.emit(`set-sy`, 0.50)
+            })
             this.rect.oncollisionbottom(()=>{
                 if(this.hardlanding){
                     const hard = {
                         number: 100, size: 20, type: `rect`, 
                         wb: 500, hb: 5, 
                         dec:0.03, offx: -250,offy: this.rect.h - 5,}
-
                     this.particles.populate(hard)
                     this.hardlanding = false
                 }
@@ -75,10 +90,19 @@ export function DodoMan(player, socket, io, Game){
             //TEXT
             this.text = Text(this.rect).set(player.name)
             this.text.offy =-30
-            //KEYBINDER
+            //KEYBINDER\    
+            let keyup = false
             this.keybinder = Keybinder(socket, io)
+            this.isgrounded = ()=>this.rect.iscolliding && (this.rect.vy === this.rect.weight || this.rect.vy === 0) && keyup
+
             this.keybinder.onkeydown({key: 'ArrowUp',cb:()=>{
-                this.rect.vy = -15
+                if(this.isgrounded()){
+                    this.rect.vy = -25
+                    keyup = false
+                }
+            }})
+            this.keybinder.onkeyup({key: 'ArrowUp',cb:()=>{
+                keyup = true
             }})
             .onkeydown({key: 'a',cb:()=>{
                 player.loadouts?.weapon?.shoot()
@@ -133,7 +157,7 @@ export function DodoMan(player, socket, io, Game){
             this.sprite.offy = -57
             this.sprite.offw = 75
             this.sprite.offh = 70
-            this.sprite.zIndex = 2
+            this.sprite.zIndex = 6
 
             this.rolleffect = Sprite(socket, this.rect, Game)
             .setname('rollEffect').set(10, 7).loadImage('/effects/firesparkeffect-compact.png')
@@ -192,14 +216,29 @@ export function DodoMan(player, socket, io, Game){
                 if(l.length <= 2){
                     socket.emit(`set-effect`, `injure`)
                 }
+                setHealTimer()
+            })
+            let timeout
+            let interval
+            const setHealTimer = ()=>{
+                clearTimeout(timeout)
+                timeout = setTimeout(()=>{
+                    clearInterval(interval)
+                    if(this.dead)return
+                    interval = setInterval(()=>{
+                        if(this.dead)return
+                        this.health.increase()
+                    }, 500)
+                }, 1000)
+            }
+            this.health.onhealthfull(()=>{
+                clearInterval(interval)
             })
             this.health.onhealthempty(()=>{
-            
-                const find = Game.players.find(p=>p.id = this.attackerId)
-                if(find)this.target(find?.character?.rect)
-                if(find)find.killed()
-                
                 this.falsestate = true
+                this.dead = true
+                if(this.dead)
+                this?.bullet?.awardwinner()                
                 this.keybinder.shouldupdate = false
                 this.controls.shouldupdate = false
                 this.stateManager.shouldupdate = false
@@ -207,7 +246,7 @@ export function DodoMan(player, socket, io, Game){
                 this.animator.playAnimation(`Death`)
                 socket.emit(`set-effect`, `death`)
                 console.log(socket.id, `dead`)
-
+                
             })
 
             //PARTICLES
@@ -217,7 +256,7 @@ export function DodoMan(player, socket, io, Game){
  
             //MANAGER
             this.stateManager = StateManager()
-             this.stateManager.add().name('Idle').cond(()=>!this.slamming && !this.rolling && !this.falsestate && this.rect.vx === 0 && (this.rect.vy === this.rect.weight || this.rect.vy === 0))
+            this.stateManager.add().name('Idle').cond(()=>!this.slamming && !this.rolling && !this.falsestate && this.rect.vx === 0 && (this.rect.vy === this.rect.weight || this.rect.vy === 0))
             .cb(()=>{
                 this.sprite.playclip('Idle')
             })
@@ -331,8 +370,10 @@ export function DodoMan(player, socket, io, Game){
                 }, 20)
                 this.health.onhealthfull(()=>{
                     clearInterval(int)
+                    if(!this.dead)return
                     this.falsestate = false
                     this.spawn()
+                    this.dead = false
                     this.keybinder.shouldupdate = true
                     this.controls.shouldupdate = true
                     this.stateManager.shouldupdate = true

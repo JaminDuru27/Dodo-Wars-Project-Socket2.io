@@ -235,7 +235,7 @@ export function Shotgun(socket, player, Game){
             this.animator.update()
             this.stateManager.update()
 
-            this.bullets.forEach(b=>{
+            this.bullets.forEach((b, x)=>{
                 b.updateall()
                 if(b.delete)this.bullets.splice(x, 1)
             })

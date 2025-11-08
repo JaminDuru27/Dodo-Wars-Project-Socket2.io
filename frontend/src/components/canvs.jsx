@@ -2,6 +2,7 @@ import { useEffect, useRef } from "react"
 import { images, socket, updates } from "../App"
 import { loop } from "../components(JS)/gam"
 import { Controller } from "../components(JS)/controller"
+import { Effects } from "./effects"
 
 export function  Canvas({roomid}) {
     // refs instead of state to avoid re-renders
@@ -18,6 +19,9 @@ export function  Canvas({roomid}) {
     const syRef = useRef(1)
     const lsxRef = useRef(1)
     const lsyRef = useRef(1)
+    const container = useRef(null)
+    const intensityRef = useRef(10)
+    const speedRef = useRef(.0002)
 
     useEffect(()=>{
         const timeout = setTimeout(()=>{
@@ -29,7 +33,9 @@ export function  Canvas({roomid}) {
             socket.on('set-lty',(v)=>{ ltyRef.current = v })
             socket.on('set-tx',(v)=>{ txRef.current = v })
             socket.on('set-ty',(v)=>{ tyRef.current = v })
-
+            socket.on('set-sx',(v)=>{ sxRef.current = v })
+            socket.on('set-sy',(v)=>{ syRef.current = v })
+            socket.on('set-sy',(v)=>{ syRef.current = v })
             socket.on(`translate-x`, (vx)=>{
                 const game = gameRef.current
                 if(!game) return
@@ -42,7 +48,7 @@ export function  Canvas({roomid}) {
                     txRef.current = -(game.world.w - window.innerWidth)
                     ltxRef.current = txRef.current
                     return
-                }
+                }   
                 txRef.current -= vx
                 ltxRef.current = txRef.current
             })
@@ -62,8 +68,7 @@ export function  Canvas({roomid}) {
                 tyRef.current -= vy
                 ltyRef.current = tyRef.current
             })
-
-            const {canvas, ctx, effects, controls}  = getElements(roomid, txRef, tyRef)
+            const {canvas, ctx}  = configCtx(roomid, txRef, tyRef, container)
             canvasElRef.current = canvas
             ctxRef.current = ctx
 
@@ -79,12 +84,12 @@ export function  Canvas({roomid}) {
             // create a single loop that reads refs
             const update = loop({
                 ctx, canvas,
-                effects, controls,
                 roomid,
                 socket, images,
                 refs: {
                     gameRef, txRef, tyRef, ltxRef, ltyRef, intRef,
-                    sxRef, syRef, lsxRef, lsyRef, playerRef
+                    sxRef, syRef, lsxRef, lsyRef, playerRef, 
+                    intensityRef, speedRef,
                 }
             })
             updates.push(update)
@@ -109,23 +114,19 @@ export function  Canvas({roomid}) {
     }, [roomid])
 
     return(
-        <>
-        <canvas className={`canvas${roomid} absolute-0 w-full h-full bg-black`}></canvas>
-        <div className={`effects${roomid} absolute-0 w-full h-full`}></div>
-        <div className={`controls${roomid} absolute-0 w-full h-full`}></div>
-        </>
+        <div className="w-full h-screen absolute top-0 left-0" ref={container}>
+            <canvas className={`canvas${roomid} absolute-0 w-full h-full bg-black`}></canvas>
+            <Effects roomid={roomid}/>
+        </div>
     )
 }
-
-function getElements(roomid, txRef, tyRef){
-    const effects = document.querySelector(`.effects${roomid}`)
-    const controls = document.querySelector(`.controls${roomid}`)
+function configCtx(roomid, txRef, tyRef, container){
     const el = document.querySelector(`.canvas${roomid}`)
-    if(el)el.requestFullscreen().catch(err=>console.log(err))
+    // if(el)el.requestFullscreen().catch(err=>console.log(err))
     el.width =  el.clientWidth
     el.height = el.clientHeight
     const ctx = el.getContext(`2d`)
-    const controller = Controller(socket, roomid, txRef, tyRef,{canvas:el, controls, effects})
+    const controller = Controller(socket, roomid, txRef, tyRef,{canvas:el, container})
     controller.setForThisDevice()
     controller.onkeyactive(({aimangle})=>{
         socket.emit(`set-aim-angle`, aimangle)
@@ -135,5 +136,5 @@ function getElements(roomid, txRef, tyRef){
         el.width =  el.clientWidth
         el.height = el.clientHeight
     }
-    return {canvas:el, ctx, effects, controls}
+    return {canvas:el, ctx}
 }

@@ -80,6 +80,7 @@ export function Rect(Game, push = true){
             if(overlapX > 0 && overlapY > 0){
                 if(ifaccepted)
                 this.iscolliding = true
+                else this.iscolliding = false
                 let find  
                 this.$oncollisionwith.forEach(e=>{
                     if([...rect.names, rect.name].includes(e.name)) find = e
@@ -131,6 +132,8 @@ export function Rect(Game, push = true){
                         this.collisiondirection = `left`
                     }
                 }
+                else this.iscolliding = false
+
             }
 
         },

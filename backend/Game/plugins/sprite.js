@@ -4,11 +4,13 @@ export function Sprite(socket, rect, Game){
     const res ={
         name: `Sprite`,
         offx: 0, offy: 0, offw: 0, offh: 0,
+        x: 0, y: 0, w: 0, h: 0,
         nx: 8, ny: 8, deltime: 0, 
         frame: 0, min: 0, framex: 0, framey: 0, max:1,
         loop: true, globaldelay: 10, clips: [],
         flip: false, zIndex: 1, rotation:0,
-        hidden: false,
+        delayaction: 1,scrollspeed:1, shouldscroll: true,
+        hidden: false, parallaxmode: false, vibration: false,
         setname(name){
             this.name = name
             return this
@@ -133,10 +135,22 @@ export function Sprite(socket, rect, Game){
             return data
         },
         calcdim(){
-            this.x  = rect.lx + this.offx
+            this.x  = rect.lx  + this.offx
             this.y  = rect.ly + this.offy
             this.w  = rect.w + this.offw
             this.h  = rect.h + this.offh
+        },
+        scroll(dir, speed){
+            if(speed){
+                this.scrollspeed = speed 
+            }
+            if(dir === `left`){
+                this.offx = (this.offx > 0)?-this.offx :this.offx
+            }
+            if(dir === `right`){
+                this.offx = (this.offx > 0)?-this.offx :this.offx
+            }
+            this.shouldscroll = true
         },
         update(){
             if(!this.loaded)return
@@ -145,6 +159,18 @@ export function Sprite(socket, rect, Game){
             }, this.globaldelay)
             this?.currentclip?.update()
             this.calcdim()
+
+            if(this.parallaxmode && this?.shouldscroll){
+                this.offx -=  this.delayaction 
+                if(this.x >= this.w - Game.W *2){
+                    this.x = 0
+                    this.offx = 0
+                }
+                if(this.x <= -this.w + Game.W *2){
+                    this.x = 0
+                    this.offx = 0
+                }
+            }
         },
     }
     res.load()

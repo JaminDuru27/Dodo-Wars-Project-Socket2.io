@@ -1,6 +1,6 @@
 import { DeathMatch } from "./objects/deathmatch.js"
 
-export function Modes(socket, io, Game, Room){
+export function Modes(socket, io, Game, Room, data){
     const res = {
         modes: [DeathMatch(socket, io, Game, Room)],
         mode: undefined,
@@ -13,7 +13,7 @@ export function Modes(socket, io, Game, Room){
             })
         },
         load(){
-            this.setmode(`DeathMatch`)
+            this.setmode(data.mode)
         },
         update(){
             this?.mode?.update()

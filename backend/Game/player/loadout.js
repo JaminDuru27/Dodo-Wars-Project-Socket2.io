@@ -32,7 +32,7 @@ export function Loadouts(socket, player, Game){
                 },
             ]
             this.loadout = this.array[0]
-            this.setWeapon(`Bazooka`)
+            this.setWeapon(`Rifle`)
 
             const grab = (rect, name)=>{
                 rect.remove()

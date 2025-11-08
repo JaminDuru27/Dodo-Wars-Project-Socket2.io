@@ -7,6 +7,7 @@ import { Menu } from './components/menu'
 import { Multiplayer } from './components/multiplayer'
 import io from 'socket.io-client'
 import { Game } from './components/game'
+import { playerinfo } from './components(JS)/playerinfo'
 export const socket = io('http://localhost:8000')
 
 export let rooms = []
@@ -50,8 +51,9 @@ socket.on('connect', ()=>{
 socket.on('get-rooms', (rms)=>{
   rooms = rms
 })
+
+
 function App() {
-  const [count, setCount] = useState(0)
   return (
     <>
     <BrowserRouter>

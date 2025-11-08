@@ -1,15 +1,16 @@
 import { Modes } from "./modes/modes.js"
 import { World } from "./plugins/world.js"
 
-export function Game(socket, io, Room){
+export function Game(socket, io, Room, data){
     const res ={
         players: [],
         rects: [],
         sprites: [],
+        data,
         load(){
             this.world = World(socket, io,Room,this)
             // this.loadPlayerObject()
-            this.modes = Modes(socket, io, this, Room)
+            this.modes = Modes(socket, io, this, Room, data)
 
         },
         loadPlayerObject(){
@@ -24,9 +25,9 @@ export function Game(socket, io, Room){
             data.world = {src: this?.world?.data?.src, w: this?.world?.w, h: this?.world?.h}
             // data.rects  =  [...this.rects.map(rect=>{return{x: rect.x, y: rect.y, w: rect.w, h: rect.h}})]
             data.sprites = [...this.sprites.map(sp=>{
-                return {name: sp.name, hidden: sp.hidden,flip: sp.flip, rotation:sp.rotation, x: sp.x, y: sp.y, w:sp.w, h: sp.h, framex: sp.framex, framey: sp.framey, sw:sp.sw, sh: sp.sh,}
+                return {name: sp.name, zIndex: sp.zIndex, parallaxmode: sp.parallaxmode, delayaction: sp.delayaction,  vibration:sp.vibration, hidden: sp.hidden,flip: sp.flip, rotation:sp.rotation, x: sp.x, y: sp.y, w:sp.w, h: sp.h, framex: sp.framex, framey: sp.framey, sw:sp.sw, sh: sp.sh,}
             })]
-            data.sprites.sort((a, b) => a.zIndex - b.zIndex);
+            // data.sprites.forEach(s=>console.log(s.x, `jj`))
             this.players.forEach(p=>{
                 const pp = {
                     rect: {},

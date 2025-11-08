@@ -2,6 +2,8 @@
 export function Pan(socket,Game, player,rect){
     const res ={
         offx: 0, offy: 0, offw: Game.W/2, offh: Game.W/2,
+        originaloffw: Game.W/2, originaloffh: Game.W/2,
+        sx: 1, sy: 1,
         $onoutsidegameleft:[],
         $onoutsidegametop:[],
         $onoutsidegameright:[],
@@ -24,7 +26,7 @@ export function Pan(socket,Game, player,rect){
         checkleft(){return this.x < -this.tx},
         checktop(){return this.y < -this.ty},
         checkright(){return this.x + this.offw + this.tx > player.gameW },
-        checkbottom(){return this.y + this.offh + this.ty> player.gameH },
+        checkbottom(){return this.y + this.offh  + this.ty> player.gameH },
         checkoutsideveiwport(){
             return (
                 this.checkleft() ||
@@ -41,7 +43,14 @@ export function Pan(socket,Game, player,rect){
         },
         load(){
             this.center()
-            
+            socket.on(`get-sx`, (sx)=>{
+                this.sx  =sx
+                this.centerX()
+            })    
+            socket.on(`get-sy`, (sy)=>{
+                this.sy  =sy
+                this.centerY()
+            })                    
         },
         setty(ty){
             socket.emit(`set-ty`, (ty))
@@ -71,8 +80,10 @@ export function Pan(socket,Game, player,rect){
             if(this.outBottom())this.call(`onoutsidegamebottom`)
         },
         update(){
-            this.x = rect.x + this.offx 
-            this.y = rect.y + this.offy 
+            this.x = rect.x + this.offx * this.sx 
+            this.y = rect.y + this.offy  * this.sy
+            this.offw = this.originaloffw *  this.sx
+            this.offh = this.originaloffh *this.sy
             this.resolve()
             this.events()
             // console.log(this.checkoutsidegame())

@@ -29,21 +29,25 @@ export function Rifle(socket, player, Game){
                 if(!this.$attacking)
                 this.stateManager.setstate(`Idle`)
             })
+            this.sprite.zIndex = 6
             
             this.spritereload= Sprite(socket, this.rect, Game).setname('NewRifleReloadMah').set(16, 1)
             .loadImage(`/weapons/Rifle/reloadmag.png`)
+            this.spritereload.zIndex = 6
             this.spritereload.addclip(`play`).from(0).to(16).loop().delay(0)
             .onframe(16, ()=>{
                 this.$reloading = false
             })
 
-            this.spriteshell = Sprite(socket, this.rect, Game).setname('NewRifleShell').set(14, 1)
+            this.spriteshell = Sprite(socket, this.rect, Game).setname('NewRifleShell').set(24, 1)
             .loadImage(`/weapons/Rifle/shootingshell.png`)
             this.spriteshell.addclip(`play`).from(0).to(14).loop().delay(0).play()
+            this.spriteshell.zIndex = 6
 
-            this.spritemuzzle = Sprite(socket, this.rect, Game).setname('NewRifleMuzzle').set(24, 1)
+            this.spritemuzzle = Sprite(socket, this.rect, Game).setname('NewRifleMuzzle').set(16, 1)
             .loadImage(`/weapons/Rifle/fullmuzzle.png`)
             this.spritemuzzle.addclip(`play`).from(0).to(24).loop().delay(0).play()
+            this.spritemuzzle.zIndex = 6
             
             
             this.sprites.push(this.sprite, this.spriteshell, this.spritemuzzle, this.spritereload)
@@ -90,6 +94,7 @@ export function Rifle(socket, player, Game){
             }})
         },
         createBullet(){
+            let del
             const rect = Rect(Game)
             rect.vx = Math.cos(player.aimangle)
             rect.vy = Math.sin(player.aimangle)
@@ -104,51 +109,80 @@ export function Rifle(socket, player, Game){
             rect.name = `bullet-${socket.id}`
             rect.addname(player.id)
             rect.id = player.id
-            rect.damage = 2
+            rect.damage = 50
             rect.vx *= rect.speed
             rect.vy *= rect.speed
             rect.id = socket.id
+            let pop
+            rect.oncollisionwith(`tile`, ()=>{
+                if(pop)return
+                rect.vx = 0
+                rect.vy = 0
+                sprite.remove()
+                spritedust.hidden = false
+                spritedust.playclip(`explode`)
+                pop = true
+            })
+            rect.addname(`damage`)
+            rect.damagecb  = ()=>{}
+            rect.awardwinner  = ()=>{
+                player.killed(player)
+            }
+            rect.shouldresolve = false
+            rect.oncollisionwith(`player`, (r)=>{
+                if(pop)return
+                if(r.id === socket.id)return
+                sprite.remove()
+                spritedust.hidden = false
+                rect.vx = 0
+                rect.vy = 0
+                spritedust.playclip(`explode`)
+                pop = true
+
+            })
+
             const sprite = Sprite(socket, rect, Game).setname('bullet').set(1, 1)
             .loadImage(`/weapons/Rifle/bullet.png`)
-
+            sprite.zIndex = 6
             if(this.spritespark)this.spritespark.remove()
+            player.character.rect.x -=2
 
             const spritedust = Sprite(socket, rect, Game).setname('bullet-dust')
-            .set(4, 4).loadImage(`effects/bulletcollision.png`)
-            spritedust.addclip(`explode`).from(0).to(15).loop(false).delay(0)
+            .set(4, 4).loadImage(`/effects/bulletcollision.png`)
+            spritedust.zIndex = 6
+            spritedust.addclip(`explode`).from(0).to(15).loop(true).delay(0)
             .onframe(15, ()=>{
                 rect.remove()
                 rect.delete = true
                 spritedust.remove()
+                del = true
             }).play()
+
             spritedust.offw = 10
             spritedust.offh = 10
+            spritedust.hidden = true
             
             sprite.offw = 5
             sprite.offh = 5
-            rect.updateall = ()=>{
-                rect.update()
-                sprite.update()
-                rect.x += rect.vx
-                rect.y += rect.vy
-                rect.l += rect.vx
-                if(rect.l > 350){
-                    rect.vx =0
-                    rect.vy =0
-                    rect.remove()
-                    sprite.remove()
-                    rect.delete = true
-                }
-                if(rect.iscolliding){
+            
+            return {
+                delete: del,
+                update(){
+                    this.delete = del
+                    rect.update()
+                    sprite.update()
                     spritedust.update()
-                    rect.name = `damage`
-                    rect.vx =0
-                    rect.vy =0
-                    sprite.remove()
-
-                }
+                    rect.x += rect.vx
+                    rect.y += rect.vy
+                    rect.l += rect.vx
+                    if(rect.l > 350){
+                        rect.vx =0
+                        rect.vy =0
+                        rect.remove()
+                        sprite.remove()
+                    }
+                },
             }
-            return rect
         },
         hide(){
             this.sprite.hidden = true
@@ -196,11 +230,11 @@ export function Rifle(socket, player, Game){
                 sprite.update()
                 sprite.rotation = player.aimangle
                 sprite.flip = player.character.sprite.flip
-                
+            
             })
             this.stateManager.update()
-            this.bullets.forEach(b=>{
-                b.updateall()
+            this.bullets.forEach((b, x)=>{
+                b.update()
                 if(b.delete)this.bullets.splice(x, 1)
             })
             this.bullets = [...this.bullets.filter(bullet=>!bullet.delete)]

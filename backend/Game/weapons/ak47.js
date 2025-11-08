@@ -89,6 +89,7 @@ export function AK47(socket, player, Game){
             return this
         },
         createBullet(){
+            let del = false
             const rect = Rect(Game)
             rect.vx = Math.cos(player.aimangle)
             rect.vy = Math.sin(player.aimangle)
@@ -104,10 +105,37 @@ export function AK47(socket, player, Game){
             rect.exception = [`player-${socket.id}`, `self`, `damage`]
             rect.l = 0
             
-            rect.damage = 5
+            rect.damage = 50
             rect.vx *= rect.speed
             rect.vy *= rect.speed
             rect.id = socket.id
+            let pop
+            rect.oncollisionwith(`tile`, ()=>{
+                if(pop)return
+                rect.vx = 0
+                rect.vy = 0
+                sprite.remove()
+                spritedust.hidden = false
+                spritedust.playclip(`explode`)
+                pop = true
+            })
+            rect.addname(`damage`)
+            rect.damagecb  = ()=>{}
+            rect.awardwinner  = ()=>{
+                player.killed(player)
+            }
+            rect.shouldresolve = false
+            rect.oncollisionwith(`player`, (r)=>{
+                if(pop)return
+                if(r.id === socket.id)return
+                sprite.remove()
+                spritedust.hidden = false
+                rect.vx = 0
+                rect.vy = 0
+                spritedust.playclip(`explode`)
+                pop = true
+
+            })
             const sprite = Sprite(socket, rect, Game).setname('bullet').set(1, 1)
             .loadImage(`/weapons/AK47/bullet.png`)
 
@@ -115,40 +143,41 @@ export function AK47(socket, player, Game){
 
             const spritedust = Sprite(socket, rect, Game).setname('bullet-dust')
             .set(4, 4).loadImage(`/effects/bulletcollision.png`)
-            spritedust.addclip(`explode`).from(0).to(15).loop(false).delay(0)
+            spritedust.addclip(`explode`).from(0).to(15).loop(true).delay(0)
             .onframe(15, ()=>{
                 rect.remove()
                 rect.delete = true
                 spritedust.remove()
+                del = true
             }).play()
+
             spritedust.offw = 10
             spritedust.offh = 10
+            spritedust.hidden = true
             
             sprite.offw = 5
             sprite.offh = 5
-            rect.updateall = ()=>{
-                rect.update()
-                sprite.update()
-                rect.x += rect.vx
-                rect.y += rect.vy
-                rect.l += rect.vx
-                if(rect.l > 350){
-                    rect.vx =0
-                    rect.vy =0
-                    rect.remove()
-                    sprite.remove()
-                    rect.delete = true
-                }
-                if(rect.iscolliding){
+        
+            return {
+                delete : del,
+                update(){
+                    this.delete = del
+                    rect.update()
+                    sprite.update()
                     spritedust.update()
-                    rect.name = `damage`
-                    rect.vx =0
-                    rect.vy =0
-                    sprite.remove()
-
+                    rect.x += rect.vx
+                    rect.y += rect.vy
+                    rect.l += rect.vx
+                    if(rect.l > 350){
+                        rect.vx =0
+                        rect.vy =0
+                        rect.remove()
+                        sprite.remove()
+                        rect.delete = true
+                    }
+                    
                 }
             }
-            return rect
         },
         shoot(){
             this.t ++
@@ -188,7 +217,7 @@ export function AK47(socket, player, Game){
             })
             this.stateManager.update()
             this.bullets.forEach((b, x)=>{
-                b.updateall()
+                b.update()
                 if(b.delete)this.bullets.splice(x, 1)
             })
             this.bullets = [...this.bullets.filter(bullet=>!bullet.delete)]

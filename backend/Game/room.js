@@ -1,9 +1,10 @@
 import { Game } from "./game.js"
 
-export function Room(roomid, socket, io, updates){
+export function Room(roomid, socket, io, updates, data){
     const res ={
         roomid,
         hostid: socket.id,
+        data,
         players : [],
         add(player){
             // if(!this.players.find(p=>p.id === player.id))
@@ -21,7 +22,7 @@ export function Room(roomid, socket, io, updates){
             }
         },
         load(){
-            this.game = Game(socket, io, this)
+            this.game = Game(socket, io, this, data)
             updates.push(this.game)
         }
     }

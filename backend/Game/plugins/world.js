@@ -1,30 +1,25 @@
-import { catacombs } from '../maps/catacombs-CollisionDatascript.js'
-import { cave } from '../maps/cave-CollisionDatascript.js'
-import { Caves } from '../maps/Caves-CollisionDatascript.js'
-import {dodomap} from '../maps/dodo map-CollisionDatascript.js'
-import { Animate } from './animation.js'
+import * as MAPS from '../maps/exports.js'
 import { Rect } from './rect.js'
 import { Sprite } from './sprite.js'
 export function World(socket,io, Room, Game){
     const res = {
         splitby: [
             'tile', 'spawn-location', 'weapon-location', 
-            'sprite-location', `zoom-.75`, `zoom-.25`, `zoom-.50`, 
+            'sprite-location', `zoom-.75`, `zoom-.25`, `zoom-.50`, `zoom-1.25`, `zoom-1`, 
             `teamA-location`, `teamB-location`, //sprite eg `tree-sprite`, must have suffix `-sprite`
         ], 
         array: 0,
         cw: 50, ch: 50,
         x: 0, y: 0,
+        lx: 0, ly: 0,
         sprites:[],
         rects: [],
         load(){
-            this.data = Caves()
+            this.data = MAPS[Game.data.map](socket,io, Room, Game, this)
             this.w = this.data.griddata.rows * this.cw
             this.h = this.data.griddata.cols * this.ch
             this.splitdata()
-            this.sprite = Sprite(socket, this, Game)
-            .setname('map').set(1, 1).loadImage(this.data.src)
-            io.to(Room.id).emit(`load-image`, ({src:this.data.src,  id: this.sprite.name}))
+            this.data.addsprites()
             this.sprites.push(this.sprite)
             const weaponsList = [
                 {src:`public/weapons/Shotgun/ref.png`, name: `Shotgun`, w: 124, h:32}, 
@@ -77,6 +72,17 @@ export function World(socket,io, Room, Game){
                                 rect.addname(`tile`)
                                 return
                             }
+                            if(row.groupname.startsWith(`zoom`)){
+                                const rect = Rect(Game)
+                                rect.x = this.cw * x * row.ratio.x
+                                rect.y = this.ch * y * row.ratio.y
+                                rect.ratio = row.ratio
+                                rect.zoom = row.groupname.split(`-`)[1]
+                                rect.shouldresolve = false
+                                rect.addname(row.groupname)
+                                return
+                            }
+                            
                             this[row.groupname].push({indx: x, indy:y})
                         }
                     })
@@ -85,7 +91,7 @@ export function World(socket,io, Room, Game){
         },
         update(){
             this?.rects?.forEach(rect=>{rect.update()})
-            this?.sprites?.forEach(sprite=>{sprite.update();if(sprite?.updateall)sprite.updateall()})
+            this?.sprites?.forEach(sprite=>{sprite?.update();if(sprite?.updateall)sprite.updateall()})
             this?.animator?.update()
         }
     }

@@ -64,18 +64,18 @@ export function MatchSocket(io){
             if(waitingPlayers.length >= number){
                 let players = []
                 let roomid = 'match-' + Date.now().toString(36) + '-' + Math.random().toString(36).substring(2, 8);
-                const room = Room(roomid, socket, io, updates).getInfo()
+                const room = Room(roomid, socket, io, updates, data).getInfo()
                 rooms[roomid] = room
                 for (let i = 0; i < number; i++){
                     players.push(waitingPlayers[i])
                 }
                 players.forEach(player=>{
                     const socket = io.sockets.sockets.get(player.id)
+                    if(!socket)return
                     socket.join(roomid)
                     waitingPlayers.splice(waitingPlayers.indexOf(player), 1)
                     room.add(Player(socket, io, player.info).getInfo())  
                 })
-                
                 io.to(roomid).emit('matched', {roomid: roomid, players: players})
                 console.log(`successfully matched players into Room ${roomid}`)
                 io.emit('get-rooms', [...Object.keys(rooms)])    

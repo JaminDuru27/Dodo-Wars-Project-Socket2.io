@@ -29,7 +29,11 @@ export function Multiplayer (){
                     <div 
                         onClick={()=>{
                             setmatchmake(prev=>!prev)
-                            socket.emit('matchmake', playerinfo(socket))
+                            socket.emit('matchmake', {
+                                ...playerinfo(socket),
+                                mode: `DeathMatch`,
+                                map: `Outpost`
+                            })
                         }}
                         className="card uppercase bg-amber-400 text-black text-[.8rem] justify-center items-center flex-col justify-between cursor-pointer items-center backdrop-blur-2xl py-1 rounded h-10 overflow-hidden rounded-sm mb-2 flex flex-col items-center te">
                             {matchmake ? 'cancel' : 'Find Match'}
